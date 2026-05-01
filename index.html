@@ -461,15 +461,17 @@
       return Number.isNaN(date.getTime()) ? null : date;
     }
 
-    function formatDateTime(timestamp) {
+    function formatTime(timestamp) {
       const date = new Date(timestamp);
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
       const hour24 = date.getHours();
       const minute = pad(date.getMinutes());
       const meridiem = hour24 >= 12 ? '오후' : '오전';
       const hour12 = hour24 % 12 || 12;
-      return `${month}/${day} ${meridiem} ${hour12}:${minute}`;
+      return `${meridiem} ${hour12}:${minute}`;
+    }
+
+    function formatTimeRange(startAt, endAt) {
+      return `${formatTime(startAt)} ~ ${formatTime(endAt)}`;
     }
 
     function setDefaultTimeInputs(baseDate = new Date()) {
@@ -594,15 +596,18 @@
           const timeRow = document.createElement('div');
           timeRow.className = 'time-row';
 
-          const startBadge = document.createElement('div');
-          startBadge.className = 'time-badge';
-          startBadge.textContent = `시작 ${formatDateTime(todo.startAt)}`;
+          const timeRangeBadge = document.createElement('div');
+          timeRangeBadge.className = 'time-badge';
+          timeRangeBadge.textContent = formatTimeRange(todo.startAt, todo.endAt);
 
-          const endBadge = document.createElement('div');
-          endBadge.className = `time-badge ${isOverdue(todo) ? 'warning' : ''}`;
-          endBadge.textContent = `${isOverdue(todo) ? '종료 지남' : '끝'} ${formatDateTime(todo.endAt)}`;
+          timeRow.append(timeRangeBadge);
 
-          timeRow.append(startBadge, endBadge);
+          if (isOverdue(todo)) {
+            const overdueBadge = document.createElement('div');
+            overdueBadge.className = 'time-badge warning';
+            overdueBadge.textContent = '종료 지남';
+            timeRow.append(overdueBadge);
+          }
 
           main.append(text, timeRow);
 
