@@ -16,10 +16,12 @@
       --accent-dark: #1d4ed8;
       --danger: #ef4444;
       --done: #10b981;
+      --warn: #f59e0b;
       --shadow: 0 12px 30px rgba(17, 24, 39, 0.08);
     }
 
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
@@ -70,7 +72,27 @@
       gap: 10px;
     }
 
-    input[type="text"] {
+    .time-grid {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input[type="text"],
+    input[type="datetime-local"] {
       width: 100%;
       border: 1px solid var(--line);
       background: #fff;
@@ -78,9 +100,11 @@
       padding: 14px 16px;
       font-size: 16px;
       outline: none;
+      color: var(--text);
     }
 
-    input[type="text"]:focus {
+    input[type="text"]:focus,
+    input[type="datetime-local"]:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
     }
@@ -100,6 +124,12 @@
     }
 
     .primary:active { background: var(--accent-dark); }
+
+    .helper {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
 
     .toolbar {
       display: flex;
@@ -152,7 +182,7 @@
       display: grid;
       grid-template-columns: auto 1fr auto;
       gap: 12px;
-      align-items: center;
+      align-items: start;
       padding: 14px 16px;
       border-top: 1px solid var(--line);
       background: white;
@@ -168,6 +198,7 @@
       background: transparent;
       position: relative;
       padding: 0;
+      margin-top: 4px;
     }
 
     .checkbox.done {
@@ -186,15 +217,59 @@
       font-weight: 900;
     }
 
+    .todo-main {
+      min-width: 0;
+    }
+
     .todo-text {
       font-size: 16px;
       line-height: 1.4;
       word-break: break-word;
+      margin-bottom: 8px;
     }
 
     .todo-text.done {
       color: var(--muted);
       text-decoration: line-through;
+    }
+
+    .time-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .time-badge {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: #374151;
+      font-weight: 700;
+    }
+
+    .time-badge.warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mini-btn {
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .mini-extend {
+      background: #dbeafe;
+      color: #1d4ed8;
     }
 
     .delete {
@@ -219,12 +294,75 @@
       background: #fafafa;
     }
 
+    .toast-wrap {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 9999;
+      width: min(360px, calc(100vw - 28px));
+    }
+
+    .toast {
+      background: rgba(17, 24, 39, 0.96);
+      color: white;
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 16px 32px rgba(0,0,0,.25);
+    }
+
+    .toast-title {
+      font-size: 13px;
+      color: #fbbf24;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .toast-text {
+      font-size: 14px;
+      line-height: 1.45;
+      margin-bottom: 12px;
+    }
+
+    .toast-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .toast-actions button {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .toast-complete {
+      background: var(--done);
+      color: white;
+    }
+
+    .toast-extend {
+      background: #1f2937;
+      color: white;
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
     @media (max-width: 480px) {
       form {
         grid-template-columns: 1fr;
       }
+      .time-grid {
+        grid-template-columns: 1fr;
+      }
       .hero h1 { font-size: 24px; }
       .section { padding: 14px; }
+      .toast-wrap {
+        left: 14px;
+        right: 14px;
+        width: auto;
+      }
     }
   </style>
 </head>
@@ -233,14 +371,27 @@
     <div class="card">
       <div class="hero">
         <h1>투두 테스트</h1>
-        <p>휴대폰에서 바로 확인할 수 있는 간단한 투두리스트입니다.</p>
+        <p>시작/끝 시간을 넣고, 종료 시 토스트 알림까지 받을 수 있습니다.</p>
       </div>
 
       <div class="section">
         <form id="todo-form">
           <input id="todo-input" type="text" placeholder="할 일을 입력하세요" autocomplete="off" />
           <button class="primary" type="submit">추가</button>
+
+          <div class="time-grid">
+            <div class="field">
+              <label for="start-time">시작 시간</label>
+              <input id="start-time" type="datetime-local" />
+            </div>
+            <div class="field">
+              <label for="end-time">끝 시간</label>
+              <input id="end-time" type="datetime-local" />
+            </div>
+          </div>
         </form>
+
+        <div class="helper">시간을 비워두면 시작 시간은 지금, 끝 시간은 30분 후로 자동 입력됩니다.</div>
 
         <div class="toolbar">
           <div class="filters">
@@ -258,27 +409,35 @@
       <div id="empty" class="empty" hidden>아직 할 일이 없습니다. 하나 추가해보세요.</div>
 
       <div class="footer">
-        브라우저에 자동 저장됩니다. 새로고침해도 유지됩니다.
+        브라우저에 자동 저장됩니다. 페이지가 열려 있으면 종료 시간에 토스트가 뜹니다.
       </div>
     </div>
   </div>
 
+  <div id="toast-wrap" class="toast-wrap" aria-live="polite" aria-atomic="true"></div>
+
   <script>
-    const STORAGE_KEY = 'todo-test-items-v1';
+    const STORAGE_KEY = 'todo-test-items-v2';
     const form = document.getElementById('todo-form');
     const input = document.getElementById('todo-input');
+    const startTimeInput = document.getElementById('start-time');
+    const endTimeInput = document.getElementById('end-time');
     const list = document.getElementById('todo-list');
     const summary = document.getElementById('summary');
     const empty = document.getElementById('empty');
     const clearDoneBtn = document.getElementById('clear-done');
     const filterButtons = [...document.querySelectorAll('[data-filter]')];
+    const toastWrap = document.getElementById('toast-wrap');
 
     let filter = 'all';
     let todos = loadTodos();
 
     function loadTodos() {
       try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        return (JSON.parse(localStorage.getItem(STORAGE_KEY)) || []).map(todo => ({
+          alertedForEndAt: null,
+          ...todo,
+        }));
       } catch {
         return [];
       }
@@ -288,12 +447,48 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
     }
 
-    function makeTodo(text) {
+    function pad(value) {
+      return String(value).padStart(2, '0');
+    }
+
+    function toLocalDatetimeValue(date) {
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function parseDatetimeValue(value) {
+      if (!value) return null;
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function formatDateTime(timestamp) {
+      const date = new Date(timestamp);
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const hour24 = date.getHours();
+      const minute = pad(date.getMinutes());
+      const meridiem = hour24 >= 12 ? '오후' : '오전';
+      const hour12 = hour24 % 12 || 12;
+      return `${month}/${day} ${meridiem} ${hour12}:${minute}`;
+    }
+
+    function setDefaultTimeInputs(baseDate = new Date()) {
+      const start = new Date(baseDate);
+      start.setSeconds(0, 0);
+      const end = new Date(start.getTime() + 30 * 60 * 1000);
+      startTimeInput.value = toLocalDatetimeValue(start);
+      endTimeInput.value = toLocalDatetimeValue(end);
+    }
+
+    function makeTodo(text, startAt, endAt) {
       return {
         id: crypto.randomUUID(),
         text,
         done: false,
         createdAt: Date.now(),
+        startAt,
+        endAt,
+        alertedForEndAt: null,
       };
     }
 
@@ -315,22 +510,60 @@
       render();
     }
 
-    function toggleTodo(id) {
-      todos = todos.map(todo => todo.id === id ? { ...todo, done: !todo.done } : todo);
+    function completeTodo(id) {
+      todos = todos.map(todo => todo.id === id ? { ...todo, done: true } : todo);
       saveTodos();
+      dismissToast(id);
+      render();
+    }
+
+    function toggleTodo(id) {
+      todos = todos.map(todo => {
+        if (todo.id !== id) return todo;
+        return {
+          ...todo,
+          done: !todo.done,
+          alertedForEndAt: !todo.done ? todo.alertedForEndAt : null,
+        };
+      });
+      saveTodos();
+      dismissToast(id);
+      render();
+    }
+
+    function extendTodo(id, minutes = 10) {
+      todos = todos.map(todo => {
+        if (todo.id !== id) return todo;
+        const base = Math.max(Date.now(), todo.endAt || Date.now());
+        return {
+          ...todo,
+          endAt: base + minutes * 60 * 1000,
+          done: false,
+          alertedForEndAt: null,
+        };
+      });
+      saveTodos();
+      dismissToast(id);
       render();
     }
 
     function deleteTodo(id) {
       todos = todos.filter(todo => todo.id !== id);
       saveTodos();
+      dismissToast(id);
       render();
     }
 
     function clearDone() {
+      const doneIds = todos.filter(todo => todo.done).map(todo => todo.id);
       todos = todos.filter(todo => !todo.done);
       saveTodos();
+      doneIds.forEach(dismissToast);
       render();
+    }
+
+    function isOverdue(todo) {
+      return !todo.done && todo.endAt <= Date.now();
     }
 
     function render() {
@@ -350,10 +583,38 @@
           checkbox.setAttribute('aria-label', todo.done ? '완료 해제' : '완료 처리');
           checkbox.addEventListener('click', () => toggleTodo(todo.id));
 
+          const main = document.createElement('div');
+          main.className = 'todo-main';
+
           const text = document.createElement('div');
           text.className = `todo-text ${todo.done ? 'done' : ''}`;
           text.textContent = todo.text;
           text.addEventListener('click', () => toggleTodo(todo.id));
+
+          const timeRow = document.createElement('div');
+          timeRow.className = 'time-row';
+
+          const startBadge = document.createElement('div');
+          startBadge.className = 'time-badge';
+          startBadge.textContent = `시작 ${formatDateTime(todo.startAt)}`;
+
+          const endBadge = document.createElement('div');
+          endBadge.className = `time-badge ${isOverdue(todo) ? 'warning' : ''}`;
+          endBadge.textContent = `${isOverdue(todo) ? '종료 지남' : '끝'} ${formatDateTime(todo.endAt)}`;
+
+          timeRow.append(startBadge, endBadge);
+
+          const actions = document.createElement('div');
+          actions.className = 'item-actions';
+
+          const extendBtn = document.createElement('button');
+          extendBtn.type = 'button';
+          extendBtn.className = 'mini-btn mini-extend';
+          extendBtn.textContent = '10분 연장';
+          extendBtn.addEventListener('click', () => extendTodo(todo.id, 10));
+
+          actions.appendChild(extendBtn);
+          main.append(text, timeRow, actions);
 
           const del = document.createElement('button');
           del.type = 'button';
@@ -362,11 +623,70 @@
           del.textContent = '✕';
           del.addEventListener('click', () => deleteTodo(todo.id));
 
-          li.append(checkbox, text, del);
+          li.append(checkbox, main, del);
           list.appendChild(li);
         });
 
       updateSummary();
+    }
+
+    function dismissToast(todoId) {
+      const toast = toastWrap.querySelector(`[data-toast-id="${todoId}"]`);
+      if (toast) toast.remove();
+    }
+
+    function showToast(todo) {
+      dismissToast(todo.id);
+
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.dataset.toastId = todo.id;
+
+      const title = document.createElement('div');
+      title.className = 'toast-title';
+      title.textContent = '끝 시간 알림';
+
+      const text = document.createElement('div');
+      text.className = 'toast-text';
+      text.textContent = `${todo.text} 일정이 끝날 시간입니다.`;
+
+      const actions = document.createElement('div');
+      actions.className = 'toast-actions';
+
+      const completeBtn = document.createElement('button');
+      completeBtn.className = 'toast-complete';
+      completeBtn.type = 'button';
+      completeBtn.textContent = '완료';
+      completeBtn.addEventListener('click', () => completeTodo(todo.id));
+
+      const extendBtn = document.createElement('button');
+      extendBtn.className = 'toast-extend';
+      extendBtn.type = 'button';
+      extendBtn.textContent = '10분 연장';
+      extendBtn.addEventListener('click', () => extendTodo(todo.id, 10));
+
+      actions.append(completeBtn, extendBtn);
+      toast.append(title, text, actions);
+      toastWrap.appendChild(toast);
+    }
+
+    function checkDueTodos() {
+      const now = Date.now();
+      let changed = false;
+
+      todos.forEach(todo => {
+        if (todo.done) return;
+        if (todo.endAt <= now && todo.alertedForEndAt !== todo.endAt) {
+          todo.alertedForEndAt = todo.endAt;
+          showToast(todo);
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        saveTodos();
+        render();
+      }
     }
 
     form.addEventListener('submit', event => {
@@ -376,9 +696,18 @@
         input.focus();
         return;
       }
-      todos.unshift(makeTodo(text));
+
+      const startDate = parseDatetimeValue(startTimeInput.value) || new Date();
+      let endDate = parseDatetimeValue(endTimeInput.value) || new Date(startDate.getTime() + 30 * 60 * 1000);
+
+      if (endDate <= startDate) {
+        endDate = new Date(startDate.getTime() + 30 * 60 * 1000);
+      }
+
+      todos.unshift(makeTodo(text, startDate.getTime(), endDate.getTime()));
       saveTodos();
       input.value = '';
+      setDefaultTimeInputs(new Date());
       render();
       input.focus();
     });
@@ -386,7 +715,10 @@
     clearDoneBtn.addEventListener('click', clearDone);
     filterButtons.forEach(btn => btn.addEventListener('click', () => setFilter(btn.dataset.filter)));
 
+    setDefaultTimeInputs();
     render();
+    checkDueTodos();
+    setInterval(checkDueTodos, 15000);
   </script>
 </body>
 </html>
