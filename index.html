@@ -604,17 +604,7 @@
 
           timeRow.append(startBadge, endBadge);
 
-          const actions = document.createElement('div');
-          actions.className = 'item-actions';
-
-          const extendBtn = document.createElement('button');
-          extendBtn.type = 'button';
-          extendBtn.className = 'mini-btn mini-extend';
-          extendBtn.textContent = '10분 연장';
-          extendBtn.addEventListener('click', () => extendTodo(todo.id, 10));
-
-          actions.appendChild(extendBtn);
-          main.append(text, timeRow, actions);
+          main.append(text, timeRow);
 
           const del = document.createElement('button');
           del.type = 'button';
