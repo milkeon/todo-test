@@ -268,8 +268,8 @@
 
     .calendar-weekdays.month,
     .calendar-grid.month {
-      grid-template-columns: repeat(7, minmax(120px, 1fr));
-      min-width: 900px;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      min-width: 0;
     }
 
     .calendar-weekday {
@@ -546,13 +546,22 @@
         margin-inline: -2px;
       }
       .calendar-weekdays.week,
-      .calendar-grid.week,
+      .calendar-grid.week {
+        min-width: 840px;
+      }
       .calendar-weekdays.month,
       .calendar-grid.month {
-        min-width: 840px;
+        min-width: 0;
       }
       .calendar-cell {
         min-height: 0;
+      }
+      .calendar-day-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .calendar-day-date {
+        font-size: 16px;
       }
       .toast-wrap {
         left: 14px;
@@ -991,8 +1000,7 @@
     }
 
     function renderMonthCalendar(items) {
-      const scroller = document.createElement('div');
-      scroller.className = 'calendar-scroller';
+      const header = createWeekdayRow('month');
       const grid = document.createElement('div');
       grid.className = 'calendar-grid month';
       const firstCell = startOfCalendarMonth(viewAnchor);
@@ -1000,11 +1008,10 @@
 
       for (let i = 0; i < 42; i += 1) {
         const date = addDays(firstCell, i);
-        grid.appendChild(createCalendarCell(date, getTodosForDate(date, items), { muted: date.getMonth() != month }));
+        grid.appendChild(createCalendarCell(date, getTodosForDate(date, items), { muted: date.getMonth() !== month }));
       }
 
-      scroller.append(createWeekdayRow('month'), grid);
-      calendarView.appendChild(scroller);
+      calendarView.append(header, grid);
     }
 
     function updateSummary() {
