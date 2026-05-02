@@ -179,6 +179,11 @@
       gap: 10px;
     }
 
+    .planner-bar-top {
+      margin-top: 0;
+      margin-bottom: 16px;
+    }
+
     .view-modes,
     .range-controls {
       display: flex;
@@ -199,6 +204,129 @@
       color: #111827;
       padding: 10px 12px;
       font-size: 13px;
+    }
+
+    .hero-topbar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .hero .view-modes {
+      justify-content: flex-start;
+    }
+
+    .hero .chip {
+      background: rgba(255,255,255,0.16);
+      color: rgba(255,255,255,0.9);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .hero .chip.active {
+      background: #ffffff;
+      color: #1e3a8a;
+    }
+
+    .hero .soft-btn {
+      background: rgba(255,255,255,0.14);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .hero .range-label {
+      color: white;
+    }
+
+    .calendar-view {
+      padding: 0 16px 16px;
+    }
+
+    .calendar-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .calendar-grid.week {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    .calendar-grid.month {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    .calendar-cell {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      min-height: 140px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .calendar-cell.muted {
+      background: #f9fafb;
+      color: var(--muted);
+    }
+
+    .calendar-cell.today {
+      border-color: #93c5fd;
+      box-shadow: inset 0 0 0 1px #bfdbfe;
+    }
+
+    .calendar-day-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 6px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .calendar-day-date {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .calendar-items {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .calendar-item {
+      border-radius: 12px;
+      padding: 8px 9px;
+      background: #dbeafe;
+      color: #1e3a8a;
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .calendar-item.done {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .calendar-item.overdue {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .calendar-item-time {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .calendar-empty {
+      color: var(--muted);
+      font-size: 12px;
     }
 
     ul {
@@ -387,6 +515,14 @@
       }
       .hero h1 { font-size: 24px; }
       .section { padding: 14px; }
+      .calendar-view { padding: 0 14px 14px; }
+      .calendar-grid.week,
+      .calendar-grid.month {
+        grid-template-columns: 1fr;
+      }
+      .calendar-cell {
+        min-height: 0;
+      }
       .toast-wrap {
         left: 14px;
         right: 14px;
@@ -399,6 +535,19 @@
   <div class="wrap">
     <div class="card">
       <div class="hero">
+        <div class="hero-topbar">
+          <div class="view-modes">
+            <button class="chip active" data-view="day" type="button">일간</button>
+            <button class="chip" data-view="week" type="button">주간</button>
+            <button class="chip" data-view="month" type="button">월간</button>
+          </div>
+          <div class="range-controls">
+            <button id="prev-range" class="soft-btn" type="button">이전</button>
+            <button id="today-range" class="soft-btn" type="button">오늘</button>
+            <button id="next-range" class="soft-btn" type="button">다음</button>
+            <div id="range-label" class="range-label"></div>
+          </div>
+        </div>
         <h1>투두 테스트</h1>
         <p>시작/끝 시간을 넣고, 종료 시 토스트 알림까지 받을 수 있습니다.</p>
       </div>
@@ -431,25 +580,12 @@
           <button id="clear-done" class="clear-btn" type="button">완료 항목 삭제</button>
         </div>
 
-        <div class="planner-bar">
-          <div class="view-modes">
-            <button class="chip active" data-view="day" type="button">일간</button>
-            <button class="chip" data-view="week" type="button">주간</button>
-            <button class="chip" data-view="month" type="button">월간</button>
-          </div>
-          <div class="range-controls">
-            <button id="prev-range" class="soft-btn" type="button">이전</button>
-            <button id="today-range" class="soft-btn" type="button">오늘</button>
-            <button id="next-range" class="soft-btn" type="button">다음</button>
-            <div id="range-label" class="range-label"></div>
-          </div>
-        </div>
-
         <div id="summary" class="summary"></div>
       </div>
 
       <ul id="todo-list"></ul>
-      <div id="empty" class="empty" hidden>아직 할 일이 없습니다. 하나 추가해보세요.</div>
+      <div id="calendar-view" class="calendar-view" hidden></div>
+      <div id="empty" class="empty" hidden>아직 일정이 없습니다. 하나 추가해보세요.</div>
 
       <div class="footer">
         브라우저에 자동 저장됩니다. 페이지가 열려 있으면 종료 시간에 토스트가 뜨고, 캘린더에 추가하면 페이지를 닫아도 폰 알림을 받을 수 있습니다.
@@ -466,6 +602,7 @@
     const startTimeInput = document.getElementById('start-time');
     const endTimeInput = document.getElementById('end-time');
     const list = document.getElementById('todo-list');
+    const calendarView = document.getElementById('calendar-view');
     const summary = document.getElementById('summary');
     const empty = document.getElementById('empty');
     const clearDoneBtn = document.getElementById('clear-done');
@@ -698,12 +835,104 @@
       return filtered;
     }
 
+    function isSameDay(left, right) {
+      return left.getFullYear() === right.getFullYear()
+        && left.getMonth() === right.getMonth()
+        && left.getDate() === right.getDate();
+    }
+
+    function formatWeekday(date) {
+      return ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+    }
+
+    function startOfCalendarMonth(date) {
+      const first = startOfMonth(date);
+      return startOfWeek(first);
+    }
+
+    function getTodosForDate(date, items = visibleTodos()) {
+      const start = startOfDay(date).getTime();
+      const end = addDays(startOfDay(date), 1).getTime();
+      return items
+        .filter(todo => todo.startAt < end && todo.endAt >= start)
+        .sort((a, b) => a.startAt - b.startAt || b.createdAt - a.createdAt);
+    }
+
+    function createCalendarItem(todo) {
+      const item = document.createElement('div');
+      item.className = `calendar-item ${todo.done ? 'done' : isOverdue(todo) ? 'overdue' : ''}`.trim();
+      item.textContent = todo.text;
+
+      const time = document.createElement('span');
+      time.className = 'calendar-item-time';
+      time.textContent = formatTimeRange(todo.startAt, todo.endAt);
+      item.appendChild(time);
+      return item;
+    }
+
+    function createCalendarCell(date, items, { muted = false } = {}) {
+      const cell = document.createElement('div');
+      cell.className = `calendar-cell${muted ? ' muted' : ''}${isSameDay(date, new Date()) ? ' today' : ''}`;
+
+      const head = document.createElement('div');
+      head.className = 'calendar-day-head';
+
+      const weekday = document.createElement('span');
+      weekday.textContent = `${formatWeekday(date)}요일`;
+
+      const dayNumber = document.createElement('span');
+      dayNumber.className = 'calendar-day-date';
+      dayNumber.textContent = String(date.getDate());
+
+      head.append(weekday, dayNumber);
+
+      const body = document.createElement('div');
+      body.className = 'calendar-items';
+
+      if (items.length === 0) {
+        const emptyText = document.createElement('div');
+        emptyText.className = 'calendar-empty';
+        emptyText.textContent = '일정 없음';
+        body.appendChild(emptyText);
+      } else {
+        items.forEach(todo => body.appendChild(createCalendarItem(todo)));
+      }
+
+      cell.append(head, body);
+      return cell;
+    }
+
+    function renderWeekCalendar(items) {
+      const grid = document.createElement('div');
+      grid.className = 'calendar-grid week';
+      const start = startOfWeek(viewAnchor);
+      for (let i = 0; i < 7; i += 1) {
+        const date = addDays(start, i);
+        grid.appendChild(createCalendarCell(date, getTodosForDate(date, items)));
+      }
+      calendarView.appendChild(grid);
+    }
+
+    function renderMonthCalendar(items) {
+      const grid = document.createElement('div');
+      grid.className = 'calendar-grid month';
+      const firstCell = startOfCalendarMonth(viewAnchor);
+      const month = startOfMonth(viewAnchor).getMonth();
+
+      for (let i = 0; i < 42; i += 1) {
+        const date = addDays(firstCell, i);
+        grid.appendChild(createCalendarCell(date, getTodosForDate(date, items), { muted: date.getMonth() != month }));
+      }
+
+      calendarView.appendChild(grid);
+    }
+
     function updateSummary() {
       const items = visibleTodos();
       const doneCount = items.filter(todo => todo.done).length;
       const activeCount = items.length - doneCount;
       rangeLabel.textContent = formatViewLabel();
-      summary.textContent = `${viewMode === 'day' ? '일간' : viewMode === 'week' ? '주간' : '월간'} 보기 · 전체 ${items.length}개 · 진행중 ${activeCount}개 · 완료 ${doneCount}개`;
+      summary.textContent = `${viewMode === 'day' ? '일간 투두' : viewMode === 'week' ? '주간 달력' : '월간 달력'} · 전체 ${items.length}개 · 진행중 ${activeCount}개 · 완료 ${doneCount}개`;
     }
 
     function setFilter(nextFilter) {
@@ -768,11 +997,7 @@
       return !todo.done && todo.endAt <= Date.now();
     }
 
-    function render() {
-      const items = visibleTodos();
-      list.innerHTML = '';
-      empty.hidden = items.length !== 0;
-
+    function renderDayList(items) {
       items
         .sort((a, b) => a.startAt - b.startAt || b.createdAt - a.createdAt)
         .forEach(todo => {
@@ -831,6 +1056,27 @@
           li.append(checkbox, main, del);
           list.appendChild(li);
         });
+    }
+
+    function render() {
+      const items = visibleTodos();
+      list.innerHTML = '';
+      calendarView.innerHTML = '';
+
+      const isDayView = viewMode === 'day';
+      list.hidden = !isDayView;
+      calendarView.hidden = isDayView;
+      empty.hidden = items.length !== 0;
+
+      if (items.length > 0) {
+        if (isDayView) {
+          renderDayList(items);
+        } else if (viewMode === 'week') {
+          renderWeekCalendar(items);
+        } else {
+          renderMonthCalendar(items);
+        }
+      }
 
       updateSummary();
     }
