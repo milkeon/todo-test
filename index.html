@@ -242,17 +242,42 @@
       padding: 0 16px 16px;
     }
 
+    .view-hint {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .calendar-scroller {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .calendar-weekdays,
     .calendar-grid {
       display: grid;
       gap: 10px;
     }
 
+    .calendar-weekdays.week,
     .calendar-grid.week {
-      grid-template-columns: repeat(7, minmax(0, 1fr));
+      grid-template-columns: repeat(7, minmax(120px, 1fr));
+      min-width: 900px;
     }
 
+    .calendar-weekdays.month,
     .calendar-grid.month {
-      grid-template-columns: repeat(7, minmax(0, 1fr));
+      grid-template-columns: repeat(7, minmax(120px, 1fr));
+      min-width: 900px;
+    }
+
+    .calendar-weekday {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      padding: 0 4px;
     }
 
     .calendar-cell {
@@ -264,6 +289,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+      cursor: pointer;
     }
 
     .calendar-cell.muted {
@@ -516,9 +542,14 @@
       .hero h1 { font-size: 24px; }
       .section { padding: 14px; }
       .calendar-view { padding: 0 14px 14px; }
+      .calendar-scroller {
+        margin-inline: -2px;
+      }
+      .calendar-weekdays.week,
       .calendar-grid.week,
+      .calendar-weekdays.month,
       .calendar-grid.month {
-        grid-template-columns: 1fr;
+        min-width: 840px;
       }
       .calendar-cell {
         min-height: 0;
@@ -569,9 +600,10 @@
           </div>
         </form>
 
-        <div class="helper">시간을 비워두면 시작 시간은 지금, 끝 시간은 30분 후로 자동 입력됩니다.</div>
+        <div id="day-helper" class="helper">시간을 비워두면 시작 시간은 지금, 끝 시간은 30분 후로 자동 입력됩니다.</div>
+        <div id="view-hint" class="view-hint" hidden>주간/월간에서는 날짜를 눌러 해당 날짜의 일간 투두로 이동하세요.</div>
 
-        <div class="toolbar">
+        <div id="day-toolbar" class="toolbar">
           <div class="filters">
             <button class="chip active" data-filter="all" type="button">전체</button>
             <button class="chip" data-filter="active" type="button">진행중</button>
@@ -605,6 +637,9 @@
     const calendarView = document.getElementById('calendar-view');
     const summary = document.getElementById('summary');
     const empty = document.getElementById('empty');
+    const dayHelper = document.getElementById('day-helper');
+    const viewHint = document.getElementById('view-hint');
+    const dayToolbar = document.getElementById('day-toolbar');
     const clearDoneBtn = document.getElementById('clear-done');
     const filterButtons = [...document.querySelectorAll('[data-filter]')];
     const viewButtons = [...document.querySelectorAll('[data-view]')];
@@ -749,9 +784,24 @@
       render();
     }
 
+    function syncViewButtons() {
+      viewButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.view === viewMode));
+    }
+
+    function openDayView(date) {
+      viewAnchor = startOfDay(date);
+      viewMode = 'day';
+      syncViewButtons();
+      setDefaultTimeInputs(getDayInputBase(viewAnchor));
+      render();
+    }
+
     function setViewMode(nextMode) {
       viewMode = nextMode;
-      viewButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.view === viewMode));
+      syncViewButtons();
+      if (viewMode === 'day') {
+        setDefaultTimeInputs(getDayInputBase(viewAnchor));
+      }
       render();
     }
 
@@ -816,6 +866,15 @@
       endTimeInput.value = toLocalDatetimeValue(end);
     }
 
+    function getDayInputBase(date) {
+      const target = startOfDay(date);
+      const today = new Date();
+      if (isSameDay(target, today)) {
+        return new Date();
+      }
+      return new Date(target.getFullYear(), target.getMonth(), target.getDate(), 9, 0, 0, 0);
+    }
+
     function makeTodo(text, startAt, endAt) {
       return {
         id: crypto.randomUUID(),
@@ -871,8 +930,11 @@
     }
 
     function createCalendarCell(date, items, { muted = false } = {}) {
-      const cell = document.createElement('div');
+      const cell = document.createElement('button');
+      cell.type = 'button';
       cell.className = `calendar-cell${muted ? ' muted' : ''}${isSameDay(date, new Date()) ? ' today' : ''}`;
+      cell.setAttribute('aria-label', `${date.getMonth() + 1}월 ${date.getDate()}일 일간 보기 열기`);
+      cell.addEventListener('click', () => openDayView(date));
 
       const head = document.createElement('div');
       head.className = 'calendar-day-head';
@@ -902,7 +964,21 @@
       return cell;
     }
 
+    function createWeekdayRow(mode) {
+      const row = document.createElement('div');
+      row.className = `calendar-weekdays ${mode}`;
+      ['월', '화', '수', '목', '금', '토', '일'].forEach(label => {
+        const item = document.createElement('div');
+        item.className = 'calendar-weekday';
+        item.textContent = label;
+        row.appendChild(item);
+      });
+      return row;
+    }
+
     function renderWeekCalendar(items) {
+      const scroller = document.createElement('div');
+      scroller.className = 'calendar-scroller';
       const grid = document.createElement('div');
       grid.className = 'calendar-grid week';
       const start = startOfWeek(viewAnchor);
@@ -910,10 +986,13 @@
         const date = addDays(start, i);
         grid.appendChild(createCalendarCell(date, getTodosForDate(date, items)));
       }
-      calendarView.appendChild(grid);
+      scroller.append(createWeekdayRow('week'), grid);
+      calendarView.appendChild(scroller);
     }
 
     function renderMonthCalendar(items) {
+      const scroller = document.createElement('div');
+      scroller.className = 'calendar-scroller';
       const grid = document.createElement('div');
       grid.className = 'calendar-grid month';
       const firstCell = startOfCalendarMonth(viewAnchor);
@@ -924,7 +1003,8 @@
         grid.appendChild(createCalendarCell(date, getTodosForDate(date, items), { muted: date.getMonth() != month }));
       }
 
-      calendarView.appendChild(grid);
+      scroller.append(createWeekdayRow('month'), grid);
+      calendarView.appendChild(scroller);
     }
 
     function updateSummary() {
@@ -1064,6 +1144,10 @@
       calendarView.innerHTML = '';
 
       const isDayView = viewMode === 'day';
+      form.hidden = !isDayView;
+      dayHelper.hidden = !isDayView;
+      dayToolbar.hidden = !isDayView;
+      viewHint.hidden = isDayView;
       list.hidden = !isDayView;
       calendarView.hidden = isDayView;
       empty.hidden = items.length !== 0;
@@ -1158,7 +1242,8 @@
       todos.unshift(makeTodo(text, startDate.getTime(), endDate.getTime()));
       saveTodos();
       input.value = '';
-      setDefaultTimeInputs(new Date());
+      viewAnchor = startOfDay(startDate);
+      setDefaultTimeInputs(getDayInputBase(viewAnchor));
       render();
       input.focus();
     });
