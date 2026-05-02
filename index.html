@@ -508,11 +508,6 @@
       color: #1d4ed8;
     }
 
-    .mini-edit {
-      background: #ede9fe;
-      color: #5b21b6;
-    }
-
     .mini-save {
       background: var(--done);
       color: white;
@@ -543,10 +538,32 @@
       flex-wrap: wrap;
     }
 
-    .delete {
+    .side-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
       background: transparent;
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    .edit-icon {
+      color: #5b21b6;
+      background: #f5f3ff;
+    }
+
+    .delete {
       color: var(--danger);
-      padding: 8px 10px;
       font-size: 18px;
     }
 
@@ -1511,30 +1528,35 @@
               timeRow.append(overdueBadge);
             }
 
-            const editBtn = document.createElement('button');
-            editBtn.type = 'button';
-            editBtn.className = 'mini-btn mini-edit';
-            editBtn.textContent = '수정';
-            editBtn.addEventListener('click', () => startEditingTodo(todo.id));
-
             const calendarBtn = document.createElement('button');
             calendarBtn.type = 'button';
             calendarBtn.className = 'mini-btn mini-calendar';
             calendarBtn.textContent = '캘린더 추가';
             calendarBtn.addEventListener('click', () => downloadCalendarEvent(todo));
 
-            actions.append(editBtn, calendarBtn);
+            actions.append(calendarBtn);
             main.append(text, timeRow, actions);
           }
 
+          const sideActions = document.createElement('div');
+          sideActions.className = 'side-actions';
+
+          const editIcon = document.createElement('button');
+          editIcon.type = 'button';
+          editIcon.className = 'icon-btn edit-icon';
+          editIcon.setAttribute('aria-label', '수정');
+          editIcon.textContent = '✎';
+          editIcon.addEventListener('click', () => startEditingTodo(todo.id));
+
           const del = document.createElement('button');
           del.type = 'button';
-          del.className = 'delete';
+          del.className = 'icon-btn delete';
           del.setAttribute('aria-label', '삭제');
           del.textContent = '✕';
           del.addEventListener('click', () => deleteTodo(todo.id));
 
-          li.append(checkbox, main, del);
+          sideActions.append(editIcon, del);
+          li.append(checkbox, main, sideActions);
           list.appendChild(li);
         });
     }
