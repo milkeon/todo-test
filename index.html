@@ -576,6 +576,181 @@
       border: 1px solid rgba(255,255,255,.18);
     }
 
+    .month-view .wrap {
+      padding-top: 14px;
+      padding-bottom: 28px;
+    }
+
+    .month-view .card {
+      border-radius: 20px;
+    }
+
+    .month-view .hero {
+      padding: 16px 16px 10px;
+    }
+
+    .month-view .hero-topbar {
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .month-view .hero h1 {
+      margin-bottom: 4px;
+      font-size: 22px;
+    }
+
+    .month-view .hero p {
+      font-size: 12px;
+      color: rgba(255,255,255,.72);
+    }
+
+    .month-view .section {
+      padding: 12px;
+    }
+
+    .month-view .calendar-view {
+      padding: 0 12px 12px;
+    }
+
+    .month-view .view-hint,
+    .month-view .summary {
+      margin-top: 8px;
+      font-size: 12px;
+    }
+
+    .month-view .calendar-weekdays.month,
+    .month-view .calendar-grid.month {
+      gap: 6px;
+    }
+
+    .month-view .calendar-weekday {
+      font-size: 11px;
+      padding: 0 2px;
+    }
+
+    .month-view .calendar-grid.month .calendar-cell {
+      min-height: 92px;
+      padding: 6px;
+      border-radius: 12px;
+      gap: 4px;
+      border-color: #e8ebf2;
+      box-shadow: none;
+    }
+
+    .month-view .calendar-grid.month .calendar-cell.muted {
+      background: #fbfbfc;
+      color: #9ca3af;
+    }
+
+    .month-view .calendar-grid.month .calendar-day-head {
+      min-height: 16px;
+    }
+
+    .month-view .calendar-grid.month .calendar-day-date {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .month-view .calendar-grid.month .calendar-items {
+      gap: 3px;
+    }
+
+    .month-view .calendar-grid.month .calendar-item {
+      padding: 3px 6px;
+      border-radius: 7px;
+      font-size: 10px;
+      line-height: 1.2;
+    }
+
+    .month-view .calendar-item-more {
+      padding-top: 1px;
+      font-size: 10px;
+    }
+
+    .month-view .toast-wrap {
+      right: 10px;
+      bottom: 10px;
+      width: min(280px, calc(100vw - 20px));
+    }
+
+    .month-view .toast {
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .month-view .toast-title {
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .month-view .toast-text {
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .month-view .toast-actions button {
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    @media (max-width: 480px) {
+      .month-view .hero {
+        padding: 14px 14px 9px;
+      }
+
+      .month-view .hero h1 {
+        font-size: 20px;
+      }
+
+      .month-view .range-controls {
+        gap: 6px;
+      }
+
+      .month-view .soft-btn,
+      .month-view .chip {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      .month-view .range-label {
+        font-size: 13px;
+        padding: 6px 0;
+      }
+
+      .month-view .section {
+        padding: 10px;
+      }
+
+      .month-view .calendar-view {
+        padding: 0 10px 10px;
+      }
+
+      .month-view .calendar-weekdays.month,
+      .month-view .calendar-grid.month {
+        gap: 4px;
+      }
+
+      .month-view .calendar-grid.month .calendar-cell {
+        min-height: 84px;
+        padding: 5px;
+        border-radius: 10px;
+      }
+
+      .month-view .calendar-grid.month .calendar-day-date {
+        font-size: 13px;
+      }
+
+      .month-view .calendar-grid.month .calendar-item {
+        padding: 2px 5px;
+        font-size: 9.5px;
+      }
+
+      .month-view .calendar-item-more {
+        font-size: 9.5px;
+      }
+    }
+
     @media (max-width: 480px) {
       form {
         grid-template-columns: 1fr;
@@ -1212,6 +1387,7 @@
       calendarView.innerHTML = '';
 
       const isDayView = viewMode === 'day';
+      document.body.classList.toggle('month-view', viewMode === 'month');
       form.hidden = !isDayView;
       dayHelper.hidden = !isDayView;
       dayToolbar.hidden = !isDayView;
