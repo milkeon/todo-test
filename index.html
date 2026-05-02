@@ -338,6 +338,15 @@
       font-size: 15px;
     }
 
+    .calendar-grid.week .calendar-cell {
+      min-height: 190px;
+    }
+
+    .calendar-grid.week .calendar-items {
+      flex: 1;
+      min-height: 112px;
+    }
+
     .calendar-grid.month .calendar-items {
       gap: 4px;
       overflow: hidden;
@@ -774,6 +783,12 @@
       }
       .calendar-cell {
         min-height: 0;
+      }
+      .calendar-grid.week .calendar-cell {
+        min-height: 190px;
+      }
+      .calendar-grid.week .calendar-items {
+        min-height: 112px;
       }
       .calendar-grid.week .calendar-day-head {
         flex-direction: column;
