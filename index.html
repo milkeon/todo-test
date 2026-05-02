@@ -316,6 +316,20 @@
       line-height: 1;
     }
 
+    .calendar-day-name {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .calendar-grid.month .calendar-day-head {
+      justify-content: flex-end;
+    }
+
+    .calendar-grid.month .calendar-day-date {
+      font-size: 16px;
+    }
+
     .calendar-items {
       display: flex;
       flex-direction: column;
@@ -556,7 +570,7 @@
       .calendar-cell {
         min-height: 0;
       }
-      .calendar-day-head {
+      .calendar-grid.week .calendar-day-head {
         flex-direction: column;
         align-items: flex-start;
       }
@@ -610,7 +624,7 @@
         </form>
 
         <div id="day-helper" class="helper">시간을 비워두면 시작 시간은 지금, 끝 시간은 30분 후로 자동 입력됩니다.</div>
-        <div id="view-hint" class="view-hint" hidden>주간/월간에서는 날짜를 눌러 해당 날짜의 일간 투두로 이동하세요.</div>
+        <div id="view-hint" class="view-hint" hidden>날짜를 눌러 해당 날짜의 일간 투두로 이동하세요.</div>
 
         <div id="day-toolbar" class="toolbar">
           <div class="filters">
@@ -938,7 +952,7 @@
       return item;
     }
 
-    function createCalendarCell(date, items, { muted = false } = {}) {
+    function createCalendarCell(date, items, { muted = false, mode = 'week' } = {}) {
       const cell = document.createElement('button');
       cell.type = 'button';
       cell.className = `calendar-cell${muted ? ' muted' : ''}${isSameDay(date, new Date()) ? ' today' : ''}`;
@@ -948,14 +962,17 @@
       const head = document.createElement('div');
       head.className = 'calendar-day-head';
 
-      const weekday = document.createElement('span');
-      weekday.textContent = `${formatWeekday(date)}요일`;
+      if (mode === 'week') {
+        const weekday = document.createElement('span');
+        weekday.className = 'calendar-day-name';
+        weekday.textContent = `${formatWeekday(date)}요일`;
+        head.appendChild(weekday);
+      }
 
       const dayNumber = document.createElement('span');
       dayNumber.className = 'calendar-day-date';
       dayNumber.textContent = String(date.getDate());
-
-      head.append(weekday, dayNumber);
+      head.appendChild(dayNumber);
 
       const body = document.createElement('div');
       body.className = 'calendar-items';
@@ -993,7 +1010,7 @@
       const start = startOfWeek(viewAnchor);
       for (let i = 0; i < 7; i += 1) {
         const date = addDays(start, i);
-        grid.appendChild(createCalendarCell(date, getTodosForDate(date, items)));
+        grid.appendChild(createCalendarCell(date, getTodosForDate(date, items), { mode: 'week' }));
       }
       scroller.append(createWeekdayRow('week'), grid);
       calendarView.appendChild(scroller);
@@ -1008,7 +1025,7 @@
 
       for (let i = 0; i < 42; i += 1) {
         const date = addDays(firstCell, i);
-        grid.appendChild(createCalendarCell(date, getTodosForDate(date, items), { muted: date.getMonth() !== month }));
+        grid.appendChild(createCalendarCell(date, getTodosForDate(date, items), { muted: date.getMonth() !== month, mode: 'month' }));
       }
 
       calendarView.append(header, grid);
