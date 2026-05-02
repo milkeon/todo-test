@@ -172,6 +172,35 @@
       margin-top: 14px;
     }
 
+    .planner-bar {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .view-modes,
+    .range-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .range-label {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+      padding: 8px 2px;
+    }
+
+    .soft-btn {
+      background: #e5e7eb;
+      color: #111827;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
     ul {
       list-style: none;
       margin: 0;
@@ -402,6 +431,20 @@
           <button id="clear-done" class="clear-btn" type="button">완료 항목 삭제</button>
         </div>
 
+        <div class="planner-bar">
+          <div class="view-modes">
+            <button class="chip active" data-view="day" type="button">일간</button>
+            <button class="chip" data-view="week" type="button">주간</button>
+            <button class="chip" data-view="month" type="button">월간</button>
+          </div>
+          <div class="range-controls">
+            <button id="prev-range" class="soft-btn" type="button">이전</button>
+            <button id="today-range" class="soft-btn" type="button">오늘</button>
+            <button id="next-range" class="soft-btn" type="button">다음</button>
+            <div id="range-label" class="range-label"></div>
+          </div>
+        </div>
+
         <div id="summary" class="summary"></div>
       </div>
 
@@ -427,9 +470,16 @@
     const empty = document.getElementById('empty');
     const clearDoneBtn = document.getElementById('clear-done');
     const filterButtons = [...document.querySelectorAll('[data-filter]')];
+    const viewButtons = [...document.querySelectorAll('[data-view]')];
+    const prevRangeBtn = document.getElementById('prev-range');
+    const todayRangeBtn = document.getElementById('today-range');
+    const nextRangeBtn = document.getElementById('next-range');
+    const rangeLabel = document.getElementById('range-label');
     const toastWrap = document.getElementById('toast-wrap');
 
     let filter = 'all';
+    let viewMode = 'day';
+    let viewAnchor = new Date();
     let todos = loadTodos();
 
     function loadTodos() {
@@ -486,6 +536,91 @@
 
     function formatTimeRange(startAt, endAt) {
       return `${formatTime(startAt)} ~ ${formatTime(endAt)}`;
+    }
+
+    function startOfDay(date) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    function addDays(date, days) {
+      const next = new Date(date);
+      next.setDate(next.getDate() + days);
+      return next;
+    }
+
+    function addMonths(date, months) {
+      return new Date(date.getFullYear(), date.getMonth() + months, 1);
+    }
+
+    function startOfWeek(date) {
+      const day = date.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      return startOfDay(addDays(date, diff));
+    }
+
+    function startOfMonth(date) {
+      return new Date(date.getFullYear(), date.getMonth(), 1);
+    }
+
+    function getViewBounds() {
+      if (viewMode === 'week') {
+        const start = startOfWeek(viewAnchor);
+        return { start, end: addDays(start, 7) };
+      }
+
+      if (viewMode === 'month') {
+        const start = startOfMonth(viewAnchor);
+        return { start, end: addMonths(start, 1) };
+      }
+
+      const start = startOfDay(viewAnchor);
+      return { start, end: addDays(start, 1) };
+    }
+
+    function formatDateLabel(date) {
+      return `${date.getMonth() + 1}/${date.getDate()}`;
+    }
+
+    function formatViewLabel() {
+      const { start, end } = getViewBounds();
+
+      if (viewMode === 'month') {
+        return `${start.getFullYear()}년 ${start.getMonth() + 1}월`;
+      }
+
+      if (viewMode === 'week') {
+        const weekEnd = addDays(end, -1);
+        return `${formatDateLabel(start)} ~ ${formatDateLabel(weekEnd)}`;
+      }
+
+      return `${start.getFullYear()}년 ${start.getMonth() + 1}월 ${start.getDate()}일`;
+    }
+
+    function moveRange(step) {
+      if (viewMode === 'month') {
+        viewAnchor = addMonths(startOfMonth(viewAnchor), step);
+      } else if (viewMode === 'week') {
+        viewAnchor = addDays(startOfWeek(viewAnchor), step * 7);
+      } else {
+        viewAnchor = addDays(startOfDay(viewAnchor), step);
+      }
+      render();
+    }
+
+    function resetRangeToToday() {
+      viewAnchor = new Date();
+      render();
+    }
+
+    function setViewMode(nextMode) {
+      viewMode = nextMode;
+      viewButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.view === viewMode));
+      render();
+    }
+
+    function isTodoInCurrentRange(todo) {
+      const { start, end } = getViewBounds();
+      return todo.startAt < end.getTime() && todo.endAt >= start.getTime();
     }
 
     function formatIcsDate(timestamp) {
@@ -557,15 +692,18 @@
     }
 
     function visibleTodos() {
-      if (filter === 'active') return todos.filter(todo => !todo.done);
-      if (filter === 'done') return todos.filter(todo => todo.done);
-      return todos;
+      let filtered = todos.filter(isTodoInCurrentRange);
+      if (filter === 'active') filtered = filtered.filter(todo => !todo.done);
+      if (filter === 'done') filtered = filtered.filter(todo => todo.done);
+      return filtered;
     }
 
     function updateSummary() {
-      const doneCount = todos.filter(todo => todo.done).length;
-      const activeCount = todos.length - doneCount;
-      summary.textContent = `전체 ${todos.length}개 · 진행중 ${activeCount}개 · 완료 ${doneCount}개`;
+      const items = visibleTodos();
+      const doneCount = items.filter(todo => todo.done).length;
+      const activeCount = items.length - doneCount;
+      rangeLabel.textContent = formatViewLabel();
+      summary.textContent = `${viewMode === 'day' ? '일간' : viewMode === 'week' ? '주간' : '월간'} 보기 · 전체 ${items.length}개 · 진행중 ${activeCount}개 · 완료 ${doneCount}개`;
     }
 
     function setFilter(nextFilter) {
@@ -636,7 +774,7 @@
       empty.hidden = items.length !== 0;
 
       items
-        .sort((a, b) => b.createdAt - a.createdAt)
+        .sort((a, b) => a.startAt - b.startAt || b.createdAt - a.createdAt)
         .forEach(todo => {
           const li = document.createElement('li');
           li.className = 'todo-item';
@@ -781,6 +919,10 @@
 
     clearDoneBtn.addEventListener('click', clearDone);
     filterButtons.forEach(btn => btn.addEventListener('click', () => setFilter(btn.dataset.filter)));
+    viewButtons.forEach(btn => btn.addEventListener('click', () => setViewMode(btn.dataset.view)));
+    prevRangeBtn.addEventListener('click', () => moveRange(-1));
+    todayRangeBtn.addEventListener('click', resetRangeToToday);
+    nextRangeBtn.addEventListener('click', () => moveRange(1));
 
     setDefaultTimeInputs();
     render();
