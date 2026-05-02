@@ -508,6 +508,41 @@
       color: #1d4ed8;
     }
 
+    .mini-edit {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+
+    .mini-save {
+      background: var(--done);
+      color: white;
+    }
+
+    .mini-cancel {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .edit-form {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .edit-form input[type="text"],
+    .edit-form input[type="datetime-local"] {
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+
+    .edit-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
     .delete {
       background: transparent;
       color: var(--danger);
@@ -895,6 +930,7 @@
     let filter = 'all';
     let viewMode = 'day';
     let viewAnchor = new Date();
+    let editingTodoId = null;
     let todos = loadTodos();
 
     function loadTodos() {
@@ -1316,10 +1352,36 @@
       render();
     }
 
+    function startEditingTodo(id) {
+      editingTodoId = id;
+      render();
+    }
+
+    function cancelEditingTodo() {
+      editingTodoId = null;
+      render();
+    }
+
+    function updateTodo(id, text, startAt, endAt) {
+      todos = todos.map(todo => todo.id === id ? {
+        ...todo,
+        text,
+        startAt,
+        endAt,
+        alertedForEndAt: null,
+      } : todo);
+      saveTodos();
+      dismissToast(id);
+      editingTodoId = null;
+      viewAnchor = startOfDay(new Date(startAt));
+      render();
+    }
+
     function deleteTodo(id) {
       todos = todos.filter(todo => todo.id !== id);
       saveTodos();
       dismissToast(id);
+      if (editingTodoId === id) editingTodoId = null;
       render();
     }
 
@@ -1351,38 +1413,119 @@
           const main = document.createElement('div');
           main.className = 'todo-main';
 
-          const text = document.createElement('div');
-          text.className = `todo-text ${todo.done ? 'done' : ''}`;
-          text.textContent = todo.text;
-          text.addEventListener('click', () => toggleTodo(todo.id));
-
-          const timeRow = document.createElement('div');
-          timeRow.className = 'time-row';
-
-          const timeRangeBadge = document.createElement('div');
-          timeRangeBadge.className = 'time-badge';
-          timeRangeBadge.textContent = formatTimeRange(todo.startAt, todo.endAt);
-
-          timeRow.append(timeRangeBadge);
-
-          if (isOverdue(todo)) {
-            const overdueBadge = document.createElement('div');
-            overdueBadge.className = 'time-badge warning';
-            overdueBadge.textContent = '종료 지남';
-            timeRow.append(overdueBadge);
-          }
-
           const actions = document.createElement('div');
           actions.className = 'item-actions';
 
-          const calendarBtn = document.createElement('button');
-          calendarBtn.type = 'button';
-          calendarBtn.className = 'mini-btn mini-calendar';
-          calendarBtn.textContent = '캘린더 추가';
-          calendarBtn.addEventListener('click', () => downloadCalendarEvent(todo));
+          if (editingTodoId === todo.id) {
+            const editForm = document.createElement('form');
+            editForm.className = 'edit-form';
 
-          actions.append(calendarBtn);
-          main.append(text, timeRow, actions);
+            const editText = document.createElement('input');
+            editText.type = 'text';
+            editText.value = todo.text;
+            editText.setAttribute('aria-label', '할 일 수정');
+
+            const editTimeGrid = document.createElement('div');
+            editTimeGrid.className = 'time-grid';
+
+            const startField = document.createElement('div');
+            startField.className = 'field';
+            const startLabel = document.createElement('label');
+            startLabel.textContent = '시작 시간';
+            const editStart = document.createElement('input');
+            editStart.type = 'datetime-local';
+            editStart.value = toLocalDatetimeValue(new Date(todo.startAt));
+            startField.append(startLabel, editStart);
+
+            const endField = document.createElement('div');
+            endField.className = 'field';
+            const endLabel = document.createElement('label');
+            endLabel.textContent = '끝 시간';
+            const editEnd = document.createElement('input');
+            editEnd.type = 'datetime-local';
+            editEnd.value = toLocalDatetimeValue(new Date(todo.endAt));
+            endField.append(endLabel, editEnd);
+
+            editTimeGrid.append(startField, endField);
+
+            const editActions = document.createElement('div');
+            editActions.className = 'edit-actions';
+
+            const saveBtn = document.createElement('button');
+            saveBtn.type = 'submit';
+            saveBtn.className = 'mini-btn mini-save';
+            saveBtn.textContent = '저장';
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.className = 'mini-btn mini-cancel';
+            cancelBtn.textContent = '취소';
+            cancelBtn.addEventListener('click', cancelEditingTodo);
+
+            editActions.append(saveBtn, cancelBtn);
+            editForm.append(editText, editTimeGrid, editActions);
+            editForm.addEventListener('submit', event => {
+              event.preventDefault();
+              const nextText = editText.value.trim();
+              if (!nextText) {
+                editText.focus();
+                return;
+              }
+
+              const nextStart = parseDatetimeValue(editStart.value);
+              const nextEnd = parseDatetimeValue(editEnd.value);
+              if (!nextStart || !nextEnd) {
+                alert('시작 시간과 끝 시간을 다시 확인해주세요.');
+                return;
+              }
+
+              if (nextEnd <= nextStart) {
+                alert('끝 시간은 시작 시간보다 늦게 설정해주세요. 입력한 시간을 30분으로 자동 변경하지 않습니다.');
+                editEnd.focus();
+                return;
+              }
+
+              updateTodo(todo.id, nextText, nextStart.getTime(), nextEnd.getTime());
+            });
+
+            main.append(editForm);
+          } else {
+            const text = document.createElement('div');
+            text.className = `todo-text ${todo.done ? 'done' : ''}`;
+            text.textContent = todo.text;
+            text.addEventListener('click', () => toggleTodo(todo.id));
+
+            const timeRow = document.createElement('div');
+            timeRow.className = 'time-row';
+
+            const timeRangeBadge = document.createElement('div');
+            timeRangeBadge.className = 'time-badge';
+            timeRangeBadge.textContent = formatTimeRange(todo.startAt, todo.endAt);
+
+            timeRow.append(timeRangeBadge);
+
+            if (isOverdue(todo)) {
+              const overdueBadge = document.createElement('div');
+              overdueBadge.className = 'time-badge warning';
+              overdueBadge.textContent = '종료 지남';
+              timeRow.append(overdueBadge);
+            }
+
+            const editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.className = 'mini-btn mini-edit';
+            editBtn.textContent = '수정';
+            editBtn.addEventListener('click', () => startEditingTodo(todo.id));
+
+            const calendarBtn = document.createElement('button');
+            calendarBtn.type = 'button';
+            calendarBtn.className = 'mini-btn mini-calendar';
+            calendarBtn.textContent = '캘린더 추가';
+            calendarBtn.addEventListener('click', () => downloadCalendarEvent(todo));
+
+            actions.append(editBtn, calendarBtn);
+            main.append(text, timeRow, actions);
+          }
 
           const del = document.createElement('button');
           del.type = 'button';
