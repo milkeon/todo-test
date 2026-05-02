@@ -1501,11 +1501,14 @@
         return;
       }
 
-      const startDate = parseDatetimeValue(startTimeInput.value) || new Date();
-      let endDate = parseDatetimeValue(endTimeInput.value) || new Date(startDate.getTime() + 30 * 60 * 1000);
+      const fallbackStart = new Date();
+      const startDate = parseDatetimeValue(startTimeInput.value) || fallbackStart;
+      const endDate = parseDatetimeValue(endTimeInput.value) || new Date(startDate.getTime() + 30 * 60 * 1000);
 
       if (endDate <= startDate) {
-        endDate = new Date(startDate.getTime() + 30 * 60 * 1000);
+        alert('끝 시간은 시작 시간보다 늦게 설정해주세요. 입력한 시간을 30분으로 자동 변경하지 않습니다.');
+        endTimeInput.focus();
+        return;
       }
 
       todos.unshift(makeTodo(text, startDate.getTime(), endDate.getTime()));
