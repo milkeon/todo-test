@@ -323,11 +323,34 @@
     }
 
     .calendar-grid.month .calendar-day-head {
-      justify-content: flex-end;
+      justify-content: flex-start;
+    }
+
+    .calendar-grid.month .calendar-cell {
+      min-height: 108px;
+      padding: 8px;
+      border-radius: 14px;
+      gap: 6px;
+      align-items: stretch;
     }
 
     .calendar-grid.month .calendar-day-date {
-      font-size: 16px;
+      font-size: 15px;
+    }
+
+    .calendar-grid.month .calendar-items {
+      gap: 4px;
+      overflow: hidden;
+    }
+
+    .calendar-grid.month .calendar-item {
+      padding: 4px 7px;
+      border-radius: 8px;
+      font-size: 11px;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .calendar-items {
@@ -362,6 +385,13 @@
       font-weight: 600;
       opacity: 0.9;
       margin-top: 2px;
+    }
+
+    .calendar-item-more {
+      padding: 3px 2px 0;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
     }
 
     .calendar-empty {
@@ -940,19 +970,23 @@
         .sort((a, b) => a.startAt - b.startAt || b.createdAt - a.createdAt);
     }
 
-    function createCalendarItem(todo) {
+    function createCalendarItem(todo, { mode = 'week' } = {}) {
       const item = document.createElement('div');
       item.className = `calendar-item ${todo.done ? 'done' : isOverdue(todo) ? 'overdue' : ''}`.trim();
       item.textContent = todo.text;
 
-      const time = document.createElement('span');
-      time.className = 'calendar-item-time';
-      time.textContent = formatTimeRange(todo.startAt, todo.endAt);
-      item.appendChild(time);
+      if (mode !== 'month') {
+        const time = document.createElement('span');
+        time.className = 'calendar-item-time';
+        time.textContent = formatTimeRange(todo.startAt, todo.endAt);
+        item.appendChild(time);
+      }
+
       return item;
     }
 
     function createCalendarCell(date, items, { muted = false, mode = 'week' } = {}) {
+      const isMonthMode = mode === 'month';
       const cell = document.createElement('button');
       cell.type = 'button';
       cell.className = `calendar-cell${muted ? ' muted' : ''}${isSameDay(date, new Date()) ? ' today' : ''}`;
@@ -978,12 +1012,22 @@
       body.className = 'calendar-items';
 
       if (items.length === 0) {
-        const emptyText = document.createElement('div');
-        emptyText.className = 'calendar-empty';
-        emptyText.textContent = '일정 없음';
-        body.appendChild(emptyText);
+        if (!isMonthMode) {
+          const emptyText = document.createElement('div');
+          emptyText.className = 'calendar-empty';
+          emptyText.textContent = '일정 없음';
+          body.appendChild(emptyText);
+        }
       } else {
-        items.forEach(todo => body.appendChild(createCalendarItem(todo)));
+        const visibleItems = isMonthMode ? items.slice(0, 2) : items;
+        visibleItems.forEach(todo => body.appendChild(createCalendarItem(todo, { mode })));
+
+        if (isMonthMode && items.length > visibleItems.length) {
+          const more = document.createElement('div');
+          more.className = 'calendar-item-more';
+          more.textContent = `+${items.length - visibleItems.length}개`;
+          body.appendChild(more);
+        }
       }
 
       cell.append(head, body);
